@@ -46,6 +46,7 @@ OC2B  3 5 PD3
 #define P0SET_PIN 6
 #define U1SET_PIN 7
 
+#define IN0_PIN 7
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -99,15 +100,19 @@ int analogRead(int pin, int samples) {
 }
 
 void setup() {
-
   for(int channel = 0; channel < PWM_CHANNELS; channel++) {
     i[channel] = 0; 
     phase[channel] = 0; 
     voltageSetpoint[channel] = 100.0; 
     voltageAmp[channel] = 100.0; 
   }
-  memcpy(sinPWM0, sinPWM, sizeof(sinPWM));
-  memcpy(sinPWM1, sinPWM, sizeof(sinPWM));
+  pinMode(IN0_PIN, INPUT_PULLUP);
+  //memcpy(sinPWM0, sinPWM, sizeof(sinPWM));
+  //memcpy(sinPWM1, sinPWM, sizeof(sinPWM));
+  for(int j = 0; j < 314; j++) {
+    sinPWM0[j] = 0.0;
+    sinPWM1[j] = 0.0;
+  }  
    
   cli(); // stop interrupts
 
@@ -316,7 +321,7 @@ void loop() {
       }  
   }
 
-  if(bman) {
+  if(bman && !digitalRead(IN0_PIN)) {
     lastVoltageSetpoint[0] = max(0, 100 - analogRead(U0SET_PIN, SAMPLES) / 10); //1023 * 100
     lastVoltageSetpoint[1] = max(0, 100 - analogRead(U1SET_PIN, SAMPLES) / 10);
     if(abs(lastVoltageSetpoint[0] - voltageSetpoint[0]) > 0) {
